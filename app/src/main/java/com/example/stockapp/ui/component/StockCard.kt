@@ -1,6 +1,5 @@
 package com.example.stockapp.ui.component
 
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -18,6 +17,12 @@ import com.example.stockapp.viewmodel.MockStockViewModel
 import com.example.stockapp.data.model.StockCardModel
 import com.example.stockapp.viewmodel.StockViewModel
 
+/**
+ * A composable function that displays a stock card with various stock information.
+ *
+ * @param stockViewModel The ViewModel that manages the stock data and UI state.
+ * @param stockCardModel The model containing stock card data.
+ */
 @Composable
 fun StockCard(stockViewModel: StockViewModel?, stockCardModel: StockCardModel) {
     val priceColor =
@@ -83,6 +88,15 @@ fun StockCard(stockViewModel: StockViewModel?, stockCardModel: StockCardModel) {
     }
 }
 
+/**
+ * A composable function that displays a row of stock information.
+ *
+ * @param textColor The color of the text.
+ * @param title1 The title of the first piece of information.
+ * @param value1 The value of the first piece of information.
+ * @param title2 The title of the second piece of information (optional).
+ * @param value2 The value of the second piece of information (optional).
+ */
 @Composable
 fun StockInfoRow(
     textColor: Color,
@@ -125,6 +139,9 @@ fun StockInfoRow(
     }
 }
 
+/**
+ * A preview composable function for displaying a stock card.
+ */
 @Preview(showBackground = true)
 @Composable
 fun StockCardPreview() {

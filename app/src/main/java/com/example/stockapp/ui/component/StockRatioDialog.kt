@@ -15,6 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.stockapp.viewmodel.StockViewModel
 
+/**
+ * Displays a dialog showing stock ratios such as PE ratio, dividend yield, and PB ratio.
+ *
+ * @param stockViewModel The ViewModel that provides the data and state for the dialog.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowStockRatioDialog(stockViewModel: StockViewModel) {

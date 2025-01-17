@@ -12,6 +12,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.stockapp.viewmodel.StockViewModel
 
+/**
+ * Displays a vertical grid of stock cards.
+ *
+ * @param stockViewModel The ViewModel that provides the data for the stock cards.
+ * @param paddingValues The padding values to be applied around the grid.
+ */
 @Composable
 fun StockVerticalGrid(stockViewModel: StockViewModel, paddingValues: PaddingValues) {
     val stockDataState = stockViewModel.stockCardData.collectAsState()

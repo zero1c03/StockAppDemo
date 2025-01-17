@@ -30,17 +30,22 @@ import com.example.stockapp.ui.component.SortBottomSheet
 import com.example.stockapp.ui.component.StockVerticalGrid
 import com.example.stockapp.viewmodel.StockViewModel
 
-
+/**
+ * Composable function that displays the stock list screen.
+ *
+ * @param stockViewModel The ViewModel that manages the stock data.
+ * @param onToggleTheme Callback function to toggle the theme.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StockListScreen(
     stockViewModel: StockViewModel = hiltViewModel(),
     onToggleTheme: () -> Unit
 ) {
-
     val context = LocalContext.current
     val initialized = stockViewModel.initialized.value
 
+    // Launches a coroutine that initializes the stock data if not already initialized.
     LaunchedEffect(Unit) {
         if (!initialized) {
             stockViewModel.showAllStockData(isNetworkAvailable(context))
@@ -53,6 +58,7 @@ fun StockListScreen(
     val tintColor =
         if (!isLoading) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.outline
 
+    // Scaffold layout with a top app bar and content.
     Scaffold(
         topBar = {
             TopAppBar(
@@ -63,6 +69,7 @@ fun StockListScreen(
                     )
                 },
                 actions = {
+                    // Refresh button to reload stock data.
                     IconButton(onClick = {
                         stockViewModel.showAllStockData(
                             isNetworkAvailable(
@@ -76,6 +83,7 @@ fun StockListScreen(
                             tint = tintColor
                         )
                     }
+                    // Menu button to show sort options.
                     IconButton(
                         onClick = { stockViewModel.showSortBottomSheet(true) },
                         enabled = !isLoading
@@ -94,6 +102,7 @@ fun StockListScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
+        // Displays a loading indicator if data is being fetched.
         if (isLoading) {
             Box(
                 modifier = Modifier
@@ -103,6 +112,7 @@ fun StockListScreen(
             ) {
                 CircularProgressIndicator()
             }
+        // Displays a message if no data is available.
         } else if (noDataAvailable) {
             Box(
                 modifier = Modifier
@@ -115,7 +125,7 @@ fun StockListScreen(
                     modifier = Modifier.padding(16.dp)
                 )
             }
-
+        // Displays the stock data in a grid.
         } else {
             StockVerticalGrid(stockViewModel, paddingValues)
         }
@@ -124,7 +134,12 @@ fun StockListScreen(
     ShowStockRatioDialog(stockViewModel)
 }
 
-
+/**
+ * Checks if the network is available.
+ *
+ * @param context The context used to get the ConnectivityManager.
+ * @return True if the network is available, false otherwise.
+ */
 private fun isNetworkAvailable(context: Context): Boolean {
     val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
