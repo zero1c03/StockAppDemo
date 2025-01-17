@@ -15,7 +15,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -60,79 +59,91 @@ class StockViewModel @Inject constructor(
         }
     }
 
-    fun fetchAllStockData() {
+    private fun fetchAllStockData() {
         viewModelScope.launch(Dispatchers.IO) {
-            val allStockData = repository.fetchAllStockData()
-
-            val stockData: List<BwibbuModel> = allStockData.component1().toList()
-            val stockDayAvgData: List<StockDayAvgModel> = allStockData.component2().toList()
-            val stockDayData: List<StockDayModel> = allStockData.component3().toList()
-
-            val combinedData = stockData.mapNotNull { stock ->
-                val dayData = stockDayData.find { it.code == stock.code }
-                val avgData = stockDayAvgData.find { it.code == stock.code }
-                if (dayData?.code != null && avgData?.code != null) {
-                    StockCardModel(
-                        code = stock.code,
-                        name = stock.name,
-                        openingPrice = dayData.openingPrice,
-                        closingPrice = dayData.closingPrice,
-                        highestPrice = dayData.highestPrice,
-                        lowestPrice = dayData.lowestPrice,
-                        change = dayData.change,
-                        tradeVolume = dayData.tradeVolume,
-                        transaction = dayData.transaction,
-                        tradeValue = dayData.tradeValue,
-                        peRatio = stock.peRatio,
-                        dividendYield = stock.dividendYield,
-                        pbRatio = stock.pbRatio,
-                        monthlyAveragePrice = avgData.monthlyAveragePrice,
+            try {
+                val allStockData = repository.fetchAllStockData()
+                val combinedData = combineStockData(
+                    Triple(
+                        allStockData.first.toList(),
+                        allStockData.second.toList(),
+                        allStockData.third.toList()
                     )
-                } else {
-                    null
-                }
-            }
-
-            if (combinedData.isEmpty()) {
+                )
+                updateStockData(combinedData)
+            } catch (_: Exception) {
                 _noDataAvailable.value = true
-            } else {
-                _noDataAvailable.value = false
-                stockCardDao.insertStock(combinedData)
-                _stockCardData.value = combinedData
+            } finally {
+                _fetchingData.value = false
             }
-            _fetchingData.value = false
         }
     }
 
-    fun fetchAllStockDataFromDatabase() {
+    private fun fetchAllStockDataFromDatabase() {
         viewModelScope.launch(Dispatchers.IO) {
-            val data = stockCardDao.getAllStocks()
-            if (data.isNotEmpty()) {
-                _stockCardData.value = data
-                _noDataAvailable.value = false
-            } else {
+            try {
+                val data = stockCardDao.getAllStocks()
+                updateStockData(data)
+            } catch (_: Exception) {
                 _noDataAvailable.value = true
+            } finally {
+                _fetchingData.value = false
             }
-            _fetchingData.value = false
+        }
+    }
+
+    private fun combineStockData(allStockData: Triple<List<BwibbuModel>, List<StockDayAvgModel>, List<StockDayModel>>): List<StockCardModel> {
+        val stockData = allStockData.first
+        val stockDayAvgData = allStockData.second
+        val stockDayData = allStockData.third
+
+        return stockData.mapNotNull { stock ->
+            val dayData = stockDayData.find { it.code == stock.code }
+            val avgData = stockDayAvgData.find { it.code == stock.code }
+            if (dayData != null && avgData != null) {
+                StockCardModel(
+                    code = stock.code,
+                    name = stock.name,
+                    openingPrice = dayData.openingPrice,
+                    closingPrice = dayData.closingPrice,
+                    highestPrice = dayData.highestPrice,
+                    lowestPrice = dayData.lowestPrice,
+                    change = dayData.change,
+                    tradeVolume = dayData.tradeVolume,
+                    transaction = dayData.transaction,
+                    tradeValue = dayData.tradeValue,
+                    peRatio = stock.peRatio,
+                    dividendYield = stock.dividendYield,
+                    pbRatio = stock.pbRatio,
+                    monthlyAveragePrice = avgData.monthlyAveragePrice,
+                )
+            } else {
+                null
+            }
+        }
+    }
+
+    private fun updateStockData(data: List<StockCardModel>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (data.isEmpty()) {
+                _noDataAvailable.value = true
+            } else {
+                _noDataAvailable.value = false
+                stockCardDao.insertStock(data)
+                _stockCardData.value = data
+            }
         }
     }
 
     fun sortStockData(ascending: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            var sortedData = _stockCardData.value
-            try {
-                if (ascending) {
-                    _stockCardData.update {
-                        sortedData.sortedBy { it.code.toInt() }
-                    }
-                } else {
-                    _stockCardData.update {
-                        sortedData.sortedByDescending { it.code.toInt() }
-                    }
-                }
-            } finally {
-                _fetchingData.value = false
+            val sortedData = if (ascending) {
+                _stockCardData.value.sortedBy { it.code.toInt() }
+            } else {
+                _stockCardData.value.sortedByDescending { it.code.toInt() }
             }
+            _stockCardData.value = sortedData
+            _fetchingData.value = false
         }
     }
 

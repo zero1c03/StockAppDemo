@@ -39,15 +39,16 @@ fun StockListScreen(
 ) {
 
     val context = LocalContext.current
+    val initialized = stockViewModel.initialized.value
 
     LaunchedEffect(Unit) {
-        if (!stockViewModel.initialized.value) {
+        if (!initialized) {
             stockViewModel.showAllStockData(isNetworkAvailable(context))
             stockViewModel.setInitialized(true)
         }
     }
 
-    var isLoading = stockViewModel.fetchingData.value
+    val isLoading = stockViewModel.fetchingData.value
     val noDataAvailable = stockViewModel.noDataAvailable.value
     val tintColor =
         if (!isLoading) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.outline
